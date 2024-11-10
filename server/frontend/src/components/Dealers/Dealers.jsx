@@ -15,33 +15,28 @@ const Dealers = () => {
   let dealer_url_by_state = "/djangoapp/get_dealers/";
  
   const filterDealers = async (state) => {
-    dealer_url_by_state = dealer_url_by_state+state;
-    const res = await fetch(dealer_url_by_state, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    if(retobj.status === 200) {
-      let state_dealers = Array.from(retobj.dealers)
-      setDealersList(state_dealers)
-    }
+  let endpoint = state === "All" ? "/djangoapp/get_dealers" : `/djangoapp/get_dealers/${state}`;
+  const res = await fetch(endpoint, { method: "GET" });
+  const retobj = await res.json();
+  
+  if (retobj.status === 200) {
+    setDealersList(retobj.dealers);
   }
+};
 
-  const get_dealers = async ()=>{
-    const res = await fetch(dealer_url, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    if(retobj.status === 200) {
-      let all_dealers = Array.from(retobj.dealers)
-      let states = [];
-      all_dealers.forEach((dealer)=>{
-        states.push(dealer.state)
-      });
 
-      setStates(Array.from(new Set(states)))
-      setDealersList(all_dealers)
-    }
+  const get_dealers = async () => {
+  const res = await fetch(dealer_url, { method: "GET" });
+  const retobj = await res.json();
+  
+  if (retobj.status === 200) {
+    const all_dealers = Array.from(retobj.dealers);
+    const uniqueStates = Array.from(new Set(all_dealers.map(dealer => dealer.state))); // Unique states
+    setStates(uniqueStates);
+    setDealersList(all_dealers);
   }
+};
+
   useEffect(() => {
     get_dealers();
   },[]);  

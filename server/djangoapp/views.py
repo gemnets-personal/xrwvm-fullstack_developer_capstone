@@ -16,7 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .populate import initiate
 from django.http import JsonResponse
 from .models import CarMake, CarModel
-
+import requests
 
 
 
@@ -91,12 +91,23 @@ def register(request):
 # def get_dealerships(request):
 #Update the `get_dealerships` render list of dealerships all by default, particular state if state is passed
 def get_dealerships(request, state="All"):
-    if(state == "All"):
+    if state == "All":
         endpoint = "/fetchDealers"
     else:
-        endpoint = "/fetchDealers/"+state
+        endpoint = "/fetchDealers/" + state
+    
     dealerships = get_request(endpoint)
-    return JsonResponse({"status":200,"dealers":dealerships})
+    
+    # Ensure states are populated for the dropdown
+    states = list(set([dealer['state'] for dealer in dealerships]))  # Unique states
+    
+    return JsonResponse({
+        "status": 200, 
+        "dealers": dealerships, 
+        "states": states  # Include states to be used in frontend filter
+    })
+
+
 # ...
 def get_cars(request):
     count = CarMake.objects.filter().count()
@@ -150,6 +161,13 @@ def add_review(request):
     else:
         return JsonResponse({"status":403,"message":"Unauthorized"})
 
-
+def get_request(endpoint):
+    try:
+        response = requests.get(endpoint)
+        response.raise_for_status()  # Raise an error for bad responses
+        return response.json()  # Or use .text depending on the response format
+    except requests.exceptions.RequestException as e:
+        print(f"Error making request to {endpoint}: {e}")
+        return None
 
 # ...
